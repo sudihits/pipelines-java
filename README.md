@@ -1,4 +1,4 @@
-
+[![Build Status](https://dev.azure.com/sudivasishta0518/Microsoft%20Learn/_apis/build/status%2Fsudihits.pipelines-java?branchName=main)](https://dev.azure.com/sudivasishta0518/Microsoft%20Learn/_build/latest?definitionId=6&branchName=main)
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
