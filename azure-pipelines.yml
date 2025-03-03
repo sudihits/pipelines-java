@@ -1,30 +1,38 @@
 trigger:
 - main
-
-pool:
-  vmImage: 'ubuntu-latest'
-
 stages:
-- stage: Build
-  displayName: 'Build Stage'
+- stage: build
   jobs:
-  - job: BuildJob
-    displayName: 'Build Job'
+  - job: run_build
+    pool:
+      vmImage: 'windows-latest'
     steps:
-    - script: |
-        echo "Restoring project dependencies..."
-      displayName: 'Restore dependencies'
-    - script: |
-        echo "Running unit tests..."
-      displayName: 'Run unit tests'
-- stage: Test
-  displayName: 'Test Stage'
-  dependsOn: Build
-  isSkippable: false
+    - task: VSBuild@1
+      inputs:
+        solution: '**/*.sln'
+        msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+        platform: 'Any CPU'
+        configuration: 'Release'
+
+    - task: CopyFiles@2
+      displayName: 'Copy scripts'
+      inputs:
+        contents: 'scripts/**'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+
+    - publish: '$(Build.ArtifactStagingDirectory)/scripts'
+      displayName: 'Publish script'
+      artifact: drop
+
+- stage: test
+  dependsOn: build
   jobs:
-  - job: TestJob
-    displayName: 'Test Job'
+  - job: run_test
+    pool:
+      vmImage: 'windows-latest'
     steps:
-    - script: |
-        echo "Running unit tests..."
-      displayName: 'Run unit tests'
+    - download: current
+      artifact: drop
+    - task: PowerShell@2
+      inputs:
+        filePath: '$(Pipeline.Workspace)\drop\test.ps1'
